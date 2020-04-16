@@ -2,7 +2,7 @@ from conans import ConanFile, CMake
 
 
 class ConanConfig(ConanFile):
-    requires = []
+    requires = ["doctest/2.3.7"]
 
     generators = "cmake"
 
@@ -13,4 +13,4 @@ class ConanConfig(ConanFile):
         cmake.configure()
         cmake.build()
         self.run('mv compile_commands.json ..')
-        self.run('./bin/lox')
+        self.run('./bin/test_lox')

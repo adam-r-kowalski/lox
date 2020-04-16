@@ -1,0 +1,28 @@
+{
+  "configurations": {
+    "lox: Launch": {
+      "adapter": "vscode-cpptools",
+      "configuration": {
+        "name": "lox",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "build/bin/test_lox",
+        "args": [],
+        "cwd": ".",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "lldb"
+      }
+    },
+    "lox: Attach": {
+      "adapter": "vscode-cpptools",
+      "configuration": {
+        "name": "lox: Attach",
+        "type": "cppdbg",
+        "request": "attach",
+        "program": "build/bin/test_lox",
+        "MIMode": "lldb"
+      }
+    }
+  }
+}

@@ -7,13 +7,31 @@ project(lox)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
+set(SOURCE_FILES
+	source/memory.cpp
+	source/debug.cpp
+	source/chunk.cpp
+	source/value.cpp
+	source/bits.cpp
+	)
+
 add_executable(${CMAKE_PROJECT_NAME}
+	${SOURCE_FILES}
 	source/main.cpp
 	)
 
+add_executable(test_${CMAKE_PROJECT_NAME}
+	${SOURCE_FILES}
+	tests/test_chunk.cpp
+	tests/test_bits.cpp
+	tests/test_main.cpp
+	)
+
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE include)
+target_include_directories(test_${CMAKE_PROJECT_NAME} PRIVATE include)
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CONAN_LIBS})
+target_link_libraries(test_${CMAKE_PROJECT_NAME} PRIVATE ${CONAN_LIBS})
 
 set(COMPILE_FLAGS
 	-std=c++2a
@@ -23,3 +41,4 @@ set(COMPILE_FLAGS
 	)
 
 target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE ${COMPILE_FLAGS})
+target_compile_options(test_${CMAKE_PROJECT_NAME} PRIVATE ${COMPILE_FLAGS})
