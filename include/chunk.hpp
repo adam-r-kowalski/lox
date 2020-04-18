@@ -7,7 +7,16 @@
 
 namespace lox {
 
-enum struct OpCode : uint8_t { CONSTANT, CONSTANT_LONG, RETURN };
+enum struct OpCode : uint8_t {
+  CONSTANT,
+  CONSTANT_LONG,
+  ADD,
+  SUBTRACT,
+  MULTIPLY,
+  DIVIDE,
+  NEGATE,
+  RETURN,
+};
 
 struct Chunk {
   Array<uint8_t> code;

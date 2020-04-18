@@ -4,6 +4,6 @@
 
 namespace lox {
 
-auto print(Value value) -> void { printf("%g", value); }
+auto print(Value const &value) -> void { printf("%g", value); }
 
 } // namespace lox

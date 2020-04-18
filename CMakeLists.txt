@@ -13,6 +13,9 @@ set(SOURCE_FILES
 	source/chunk.cpp
 	source/value.cpp
 	source/bits.cpp
+	source/virtual_machine.cpp
+	source/compiler.cpp
+	source/scanner.cpp
 	)
 
 add_executable(${CMAKE_PROJECT_NAME}

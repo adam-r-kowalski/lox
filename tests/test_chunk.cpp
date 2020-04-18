@@ -28,7 +28,7 @@ TEST_CASE("write 256 constants than return") {
   write(chunk, 128.0, 123);
   write(chunk, static_cast<uint8_t>(OpCode::RETURN), 456);
   CHECK(chunk.code.count == 517);
-  auto data = chunk.code.data;
+  auto const data = chunk.code.data;
   CHECK(data[510] == static_cast<uint8_t>(OpCode::CONSTANT));
   CHECK(data[511] == 255);
   CHECK(data[512] == static_cast<uint8_t>(OpCode::CONSTANT_LONG));

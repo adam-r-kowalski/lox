@@ -6,6 +6,6 @@ namespace lox {
 
 using Value = double;
 
-auto print(Value value) -> void;
+auto print(Value const &value) -> void;
 
 } // namespace lox

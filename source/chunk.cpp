@@ -9,7 +9,7 @@ auto write(Chunk &chunk, uint8_t byte, int line) -> void {
 }
 
 auto write(Chunk &chunk, Value value, int line) -> void {
-  auto constant = add_constant(chunk, value);
+  auto const constant = add_constant(chunk, value);
   if (constant < (2 << 7)) {
     write(chunk, static_cast<uint8_t>(OpCode::CONSTANT), line);
     write(chunk, static_cast<uint8_t>(constant), line);

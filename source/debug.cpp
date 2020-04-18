@@ -6,18 +6,18 @@
 
 namespace lox {
 
-auto disassemble(const Chunk &chunk, const char *name) -> void {
+auto disassemble(Chunk const &chunk, char const *name) -> void {
   printf("== %s ==\n", name);
   for (int offset = 0; offset < chunk.code.count;)
     offset = disassemble(chunk, offset);
 }
 
-auto simple_instruction(const char *name, int offset) -> int {
+auto simple_instruction(char const *name, int offset) -> int {
   printf("%s\n", name);
   return offset + 1;
 }
 
-auto constant_instruction(const char *name, const Chunk &chunk, int offset)
+auto constant_instruction(char const *name, Chunk const &chunk, int offset)
     -> int {
   auto const constant = chunk.code.data[offset + 1];
   printf("%-16s %4d '", name, constant);
@@ -26,7 +26,7 @@ auto constant_instruction(const char *name, const Chunk &chunk, int offset)
   return offset + 2;
 }
 
-auto constant_long_instruction(const char *name, const Chunk &chunk, int offset)
+auto constant_long_instruction(char const *name, Chunk const &chunk, int offset)
     -> int {
   auto const data = chunk.code.data;
   auto const constant =
@@ -37,7 +37,7 @@ auto constant_long_instruction(const char *name, const Chunk &chunk, int offset)
   return offset + 4;
 }
 
-auto disassemble(const Chunk &chunk, int offset) -> int {
+auto disassemble(Chunk const &chunk, int offset) -> int {
   printf("%04d ", offset);
   if (offset > 0 && chunk.lines.data[offset] == chunk.lines.data[offset - 1])
     printf("   | ");
@@ -50,6 +50,16 @@ auto disassemble(const Chunk &chunk, int offset) -> int {
     return constant_instruction("CONSTANT", chunk, offset);
   case static_cast<uint8_t>(OpCode::CONSTANT_LONG):
     return constant_long_instruction("CONSTANT LONG", chunk, offset);
+  case static_cast<uint8_t>(OpCode::ADD):
+    return simple_instruction("ADD", offset);
+  case static_cast<uint8_t>(OpCode::SUBTRACT):
+    return simple_instruction("SUBTRACT", offset);
+  case static_cast<uint8_t>(OpCode::MULTIPLY):
+    return simple_instruction("MULTIPLY", offset);
+  case static_cast<uint8_t>(OpCode::DIVIDE):
+    return simple_instruction("DIVIDE", offset);
+  case static_cast<uint8_t>(OpCode::NEGATE):
+    return simple_instruction("NEGATE", offset);
   case static_cast<uint8_t>(OpCode::RETURN):
     return simple_instruction("RETURN", offset);
   default:

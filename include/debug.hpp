@@ -4,7 +4,9 @@
 
 namespace lox {
 
-auto disassemble(const Chunk &chunk, const char *name) -> void;
-auto disassemble(const Chunk &chunk, int offset) -> int;
+auto constexpr trace_execution = true;
+
+auto disassemble(Chunk const &chunk, char const *name) -> void;
+auto disassemble(Chunk const &chunk, int offset) -> int;
 
 } // namespace lox
