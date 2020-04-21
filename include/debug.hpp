@@ -4,6 +4,7 @@
 
 namespace lox {
 
+auto constexpr print_code = true;
 auto constexpr trace_execution = true;
 
 auto disassemble(Chunk const &chunk, char const *name) -> void;

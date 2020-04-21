@@ -2,10 +2,10 @@
 
 #include <string_view>
 
-#include <virtual_machine.hpp>
+#include <chunk.hpp>
 
 namespace lox {
 
-auto compile(VirtualMachine const &vm, std::string_view source) -> void;
+auto compile(std::string_view source, Chunk &chunk) -> bool;
 
 } // namespace lox

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,8 +42,8 @@ auto repl(VirtualMachine &vm) -> void {
       printf("\n");
       break;
     }
+    interpret(vm, line);
   }
-  interpret(vm, line);
 }
 
 auto run_file(VirtualMachine &vm, char const *path) -> void {

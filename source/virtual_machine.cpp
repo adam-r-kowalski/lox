@@ -66,8 +66,12 @@ auto run(VirtualMachine &vm) -> InterpretResult {
 }
 
 auto interpret(VirtualMachine &vm, std::string_view source) -> InterpretResult {
-  compile(vm, source);
-  return InterpretResult::OK;
+  auto chunk = Chunk{};
+  if (!compile(source, chunk))
+    return InterpretResult::COMPILE_ERROR;
+  vm.chunk = &chunk;
+  vm.instruction_pointer = vm.chunk->code.data;
+  return run(vm);
 }
 
 auto push(VirtualMachine &vm, Value value) -> void {

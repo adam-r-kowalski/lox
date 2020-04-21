@@ -22,7 +22,7 @@ enum class TokenType {
   DOT,
   MINUS,
   PLUS,
-  SEMICOLOR,
+  SEMICOLON,
   SLASH,
   STAR,
 
