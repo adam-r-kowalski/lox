@@ -140,7 +140,7 @@ auto emit_bytes(Chunk &chunk, Parser const &parser, uint8_t byte,
 
 auto number(Chunk &chunk, Parser &parser, Scanner &) -> void {
   auto const value = std::stod(std::string{parser.previous.start});
-  write(chunk, value, parser.previous.line);
+  write(chunk, number_val(value), parser.previous.line);
 }
 
 auto grouping(Chunk &chunk, Parser &parser, Scanner &scanner) -> void {

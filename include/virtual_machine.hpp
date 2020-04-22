@@ -24,5 +24,6 @@ auto reset_stack(VirtualMachine &vm) -> void;
 auto interpret(VirtualMachine &vm, std::string_view source) -> InterpretResult;
 auto push(VirtualMachine &vm, Value value) -> void;
 auto pop(VirtualMachine &vm) -> Value;
+auto peek(VirtualMachine &vm, int distance) -> Value;
 
 } // namespace lox

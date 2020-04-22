@@ -1,15 +1,32 @@
 #include <functional>
+#include <stdarg.h>
 #include <stdio.h>
 
 #include <compiler.hpp>
 #include <debug.hpp>
+#include <value.hpp>
 #include <virtual_machine.hpp>
 
 namespace lox {
 
+auto runtime_error(VirtualMachine &vm, const char *format, ...) -> void;
+
 VirtualMachine::VirtualMachine() { reset_stack(*this); }
 
 auto reset_stack(VirtualMachine &vm) -> void { vm.stack_top = vm.stack; }
+
+auto runtime_error(VirtualMachine &vm, const char *format, ...) -> void {
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+  fputs("\n", stderr);
+
+  auto const instruction = vm.instruction_pointer - vm.chunk->code.data - 1;
+  auto const line = vm.chunk->lines.data[instruction];
+  fprintf(stderr, "[line %d] in script\n", line);
+  reset_stack(vm);
+}
 
 auto run(VirtualMachine &vm) -> InterpretResult {
   auto const read_byte = [&]() -> uint8_t { return *vm.instruction_pointer++; };
@@ -54,7 +71,11 @@ auto run(VirtualMachine &vm) -> InterpretResult {
       binary_op(std::divides<double>());
       break;
     case static_cast<uint8_t>(OpCode::NEGATE):
-      push(vm, -pop(vm));
+      if (!is_number(peek(vm, 0))) {
+        runtime_error("Operand must be a number.");
+        return InterpretResult::RUNTIME_ERROR;
+      }
+      push(vm, number_val(-pop(vm).as.number));
       break;
     case static_cast<uint8_t>(OpCode::RETURN): {
       print(pop(vm));
@@ -82,6 +103,10 @@ auto push(VirtualMachine &vm, Value value) -> void {
 auto pop(VirtualMachine &vm) -> Value {
   vm.stack_top--;
   return *vm.stack_top;
+}
+
+auto peek(VirtualMachine &vm, int distance) -> Value {
+  return vm.stack_top[-1 - distance];
 }
 
 } // namespace lox

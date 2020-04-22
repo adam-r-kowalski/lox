@@ -132,7 +132,11 @@ auto skip_whitespace(Scanner &scanner) -> void {
   }
 }
 
-auto peek(Scanner const &scanner) -> char { return scanner.current.at(0); }
+auto peek(Scanner const &scanner) -> char {
+  if (is_at_end(scanner))
+    return '\0';
+  return scanner.current.at(0);
+}
 
 auto peek_next(Scanner const &scanner) -> char {
   return is_at_end(scanner) ? '\0' : scanner.current.at(1);
