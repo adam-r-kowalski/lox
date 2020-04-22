@@ -4,6 +4,19 @@
 
 namespace lox {
 
+auto operator==(Value const &lhs, Value const &rhs) -> bool {
+  if (lhs.type != rhs.type)
+    return false;
+  switch (lhs.type) {
+  case ValueType::BOOL:
+    return lhs.as.boolean == rhs.as.boolean;
+  case ValueType::NUMBER:
+    return lhs.as.number == rhs.as.number;
+  case ValueType::NIL:
+    return true;
+  }
+}
+
 auto is_bool(Value const &value) -> bool {
   return value.type == ValueType::BOOL;
 }

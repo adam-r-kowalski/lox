@@ -33,10 +33,15 @@ auto run(VirtualMachine &vm) -> InterpretResult {
   auto const read_constant = [&]() -> Value {
     return vm.chunk->constants.data[read_byte()];
   };
-  auto const binary_op = [&](auto op) {
-    auto rhs = pop(vm);
-    auto lhs = pop(vm);
-    push(vm, op(lhs, rhs));
+  auto const binary_op = [&](auto value_type, auto op) -> bool {
+    if (!is_number(peek(vm, 0)) || !is_number(peek(vm, 1))) {
+      runtime_error(vm, "Operands must be numbers.");
+      return false;
+    }
+    auto const rhs = pop(vm).as.number;
+    auto const lhs = pop(vm).as.number;
+    push(vm, value_type(op(lhs, rhs)));
+    return true;
   };
 
   for (;;) {
@@ -59,20 +64,24 @@ auto run(VirtualMachine &vm) -> InterpretResult {
       break;
     }
     case static_cast<uint8_t>(OpCode::ADD):
-      binary_op(std::plus<double>());
+      if (!binary_op(number_val, std::plus<double>()))
+        return InterpretResult::RUNTIME_ERROR;
       break;
     case static_cast<uint8_t>(OpCode::SUBTRACT):
-      binary_op(std::minus<double>());
+      if (!binary_op(number_val, std::minus<double>()))
+        return InterpretResult::RUNTIME_ERROR;
       break;
     case static_cast<uint8_t>(OpCode::MULTIPLY):
-      binary_op(std::multiplies<double>());
+      if (!binary_op(number_val, std::multiplies<double>()))
+        return InterpretResult::RUNTIME_ERROR;
       break;
     case static_cast<uint8_t>(OpCode::DIVIDE):
-      binary_op(std::divides<double>());
+      if (!binary_op(number_val, std::divides<double>()))
+        return InterpretResult::RUNTIME_ERROR;
       break;
     case static_cast<uint8_t>(OpCode::NEGATE):
       if (!is_number(peek(vm, 0))) {
-        runtime_error("Operand must be a number.");
+        runtime_error(vm, "Operand must be a number.");
         return InterpretResult::RUNTIME_ERROR;
       }
       push(vm, number_val(-pop(vm).as.number));

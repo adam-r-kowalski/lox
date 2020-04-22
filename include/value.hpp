@@ -14,6 +14,7 @@ struct Value {
   } as;
 };
 
+auto operator==(Value const &lhs, Value const &rhs) -> bool;
 auto is_bool(Value const &value) -> bool;
 auto is_nil(Value const &value) -> bool;
 auto is_number(Value const &value) -> bool;
