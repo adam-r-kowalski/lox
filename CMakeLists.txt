@@ -16,6 +16,7 @@ set(SOURCE_FILES
 	source/virtual_machine.cpp
 	source/compiler.cpp
 	source/scanner.cpp
+	source/object.cpp
 	)
 
 add_executable(${CMAKE_PROJECT_NAME}

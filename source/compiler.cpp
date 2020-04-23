@@ -3,6 +3,7 @@
 #include <chunk.hpp>
 #include <compiler.hpp>
 #include <debug.hpp>
+#include <object.hpp>
 #include <scanner.hpp>
 
 namespace lox {
@@ -57,6 +58,7 @@ auto emit_bytes(Chunk &chunk, Parser const &parser, OpCode op_code,
                 Bytes... bytes) -> void;
 
 auto number(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
+auto string(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
 auto grouping(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
 auto unary(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
 auto binary(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
@@ -160,6 +162,13 @@ auto number(Chunk &chunk, Parser &parser, Scanner &) -> void {
   write(chunk, number_val(value), parser.previous.line);
 }
 
+auto string(Chunk &chunk, Parser &parser, Scanner &) -> void {
+  auto const string = parser.previous.start;
+  auto const value =
+      obj_val(copy_string(string.substr(1, string.length() - 2)));
+  write(chunk, value, parser.previous.line);
+}
+
 auto grouping(Chunk &chunk, Parser &parser, Scanner &scanner) -> void {
   expression(chunk, parser, scanner);
   consume(parser, scanner, TokenType::RIGHT_PAREN,
@@ -259,7 +268,7 @@ constexpr ParseRule rules[] = {
     {NULL, binary, Precedence::COMPARISON}, // TOKEN_LESS
     {NULL, binary, Precedence::COMPARISON}, // TOKEN_LESS_EQUAL
     {NULL, NULL, Precedence::NONE},         // TOKEN_IDENTIFIER
-    {NULL, NULL, Precedence::NONE},         // TOKEN_STRING
+    {string, NULL, Precedence::NONE},       // TOKEN_STRING
     {number, NULL, Precedence::NONE},       // TOKEN_NUMBER
     {NULL, NULL, Precedence::NONE},         // TOKEN_AND
     {NULL, NULL, Precedence::NONE},         // TOKEN_CLASS
