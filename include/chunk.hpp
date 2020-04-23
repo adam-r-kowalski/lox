@@ -10,10 +10,17 @@ namespace lox {
 enum struct OpCode : uint8_t {
   CONSTANT,
   CONSTANT_LONG,
+  NIL,
+  TRUE,
+  FALSE,
+  EQUAL,
+  GREATER,
+  LESS,
   ADD,
   SUBTRACT,
   MULTIPLY,
   DIVIDE,
+  NOT,
   NEGATE,
   RETURN,
 };

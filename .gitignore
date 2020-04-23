@@ -1,5 +1,4 @@
 build/
 compile_commands.json
-.vimspector.json
-.dir-locals.el
 .clangd/
+.vscode

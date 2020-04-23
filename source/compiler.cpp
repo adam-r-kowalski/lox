@@ -1,5 +1,6 @@
 #include <string>
 
+#include <chunk.hpp>
 #include <compiler.hpp>
 #include <debug.hpp>
 #include <scanner.hpp>
@@ -47,14 +48,19 @@ auto end_compiler(Chunk &chunk, Parser const &parser) -> void;
 auto emit_return(Chunk &chunk, Parser const &parser) -> void;
 
 auto emit_bytes(Chunk &chunk, Parser const &parser, uint8_t byte) -> void;
+auto emit_bytes(Chunk &chunk, Parser const &parser, OpCode op_code) -> void;
 template <typename... Bytes>
 auto emit_bytes(Chunk &chunk, Parser const &parser, uint8_t byte,
+                Bytes... bytes) -> void;
+template <typename... Bytes>
+auto emit_bytes(Chunk &chunk, Parser const &parser, OpCode op_code,
                 Bytes... bytes) -> void;
 
 auto number(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
 auto grouping(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
 auto unary(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
 auto binary(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
+auto literal(Chunk &chunk, Parser &parser, Scanner &scanner) -> void;
 auto parse_precedence(Chunk &chunk, Parser &parser, Scanner &scanner,
                       Precedence precedence) -> void;
 auto get_rule(TokenType type) -> ParseRule const &;
@@ -124,18 +130,29 @@ auto end_compiler(Chunk &chunk, Parser const &parser) -> void {
 }
 
 auto emit_return(Chunk &chunk, Parser const &parser) -> void {
-  return emit_bytes(chunk, parser, static_cast<uint8_t>(OpCode::RETURN));
+  return emit_bytes(chunk, parser, OpCode::RETURN);
 }
 
 auto emit_bytes(Chunk &chunk, Parser const &parser, uint8_t byte) -> void {
   write(chunk, byte, parser.previous.line);
 }
 
+auto emit_bytes(Chunk &chunk, Parser const &parser, OpCode op_code) -> void {
+  write(chunk, static_cast<uint8_t>(op_code), parser.previous.line);
+}
+
 template <typename... Bytes>
 auto emit_bytes(Chunk &chunk, Parser const &parser, uint8_t byte,
                 Bytes... bytes) -> void {
   write(chunk, byte, parser.previous.line);
-  emite_bytes(chunk, parser, bytes...);
+  emit_bytes(chunk, parser, bytes...);
+}
+
+template <typename... Bytes>
+auto emit_bytes(Chunk &chunk, Parser const &parser, OpCode op_code,
+                Bytes... bytes) -> void {
+  write(chunk, static_cast<uint8_t>(op_code), parser.previous.line);
+  emit_bytes(chunk, parser, bytes...);
 }
 
 auto number(Chunk &chunk, Parser &parser, Scanner &) -> void {
@@ -153,8 +170,11 @@ auto unary(Chunk &chunk, Parser &parser, Scanner &scanner) -> void {
   auto const operator_type = parser.previous.type;
   parse_precedence(chunk, parser, scanner, Precedence::UNARY);
   switch (operator_type) {
+  case TokenType::BANG:
+    emit_bytes(chunk, parser, OpCode::NOT);
+    break;
   case TokenType::MINUS:
-    emit_bytes(chunk, parser, static_cast<uint8_t>(OpCode::NEGATE));
+    emit_bytes(chunk, parser, OpCode::NEGATE);
     break;
   default:
     return;
@@ -167,17 +187,51 @@ auto binary(Chunk &chunk, Parser &parser, Scanner &scanner) -> void {
   auto const precedence = static_cast<uint8_t>(rule.precedence) + 1;
   parse_precedence(chunk, parser, scanner, static_cast<Precedence>(precedence));
   switch (operator_type) {
+  case TokenType::BANG_EQUAL:
+    emit_bytes(chunk, parser, OpCode::EQUAL, OpCode::NOT);
+    break;
+  case TokenType::EQUAL_EQUAL:
+    emit_bytes(chunk, parser, OpCode::EQUAL);
+    break;
+  case TokenType::GREATER:
+    emit_bytes(chunk, parser, OpCode::GREATER);
+    break;
+  case TokenType::GREATER_EQUAL:
+    emit_bytes(chunk, parser, OpCode::LESS, OpCode::NOT);
+    break;
+  case TokenType::LESS:
+    emit_bytes(chunk, parser, OpCode::LESS);
+    break;
+  case TokenType::LESS_EQUAL:
+    emit_bytes(chunk, parser, OpCode::GREATER, OpCode::NOT);
+    break;
   case TokenType::PLUS:
-    emit_bytes(chunk, parser, static_cast<uint8_t>(OpCode::ADD));
+    emit_bytes(chunk, parser, OpCode::ADD);
     break;
   case TokenType::MINUS:
-    emit_bytes(chunk, parser, static_cast<uint8_t>(OpCode::SUBTRACT));
+    emit_bytes(chunk, parser, OpCode::SUBTRACT);
     break;
   case TokenType::STAR:
-    emit_bytes(chunk, parser, static_cast<uint8_t>(OpCode::MULTIPLY));
+    emit_bytes(chunk, parser, OpCode::MULTIPLY);
     break;
   case TokenType::SLASH:
-    emit_bytes(chunk, parser, static_cast<uint8_t>(OpCode::DIVIDE));
+    emit_bytes(chunk, parser, OpCode::DIVIDE);
+    break;
+  default:
+    return;
+  }
+}
+
+auto literal(Chunk &chunk, Parser &parser, Scanner &) -> void {
+  switch (parser.previous.type) {
+  case TokenType::FALSE:
+    emit_bytes(chunk, parser, OpCode::FALSE);
+    break;
+  case TokenType::TRUE:
+    emit_bytes(chunk, parser, OpCode::TRUE);
+    break;
+  case TokenType::NIL:
+    emit_bytes(chunk, parser, OpCode::NIL);
     break;
   default:
     return;
@@ -185,46 +239,46 @@ auto binary(Chunk &chunk, Parser &parser, Scanner &scanner) -> void {
 }
 
 constexpr ParseRule rules[] = {
-    {grouping, NULL, Precedence::NONE}, // TOKEN_LEFT_PAREN
-    {NULL, NULL, Precedence::NONE},     // TOKEN_RIGHT_PAREN
-    {NULL, NULL, Precedence::NONE},     // TOKEN_LEFT_BRACE
-    {NULL, NULL, Precedence::NONE},     // TOKEN_RIGHT_BRACE
-    {NULL, NULL, Precedence::NONE},     // TOKEN_COMMA
-    {NULL, NULL, Precedence::NONE},     // TOKEN_DOT
-    {unary, binary, Precedence::TERM},  // TOKEN_MINUS
-    {NULL, binary, Precedence::TERM},   // TOKEN_PLUS
-    {NULL, NULL, Precedence::NONE},     // TOKEN_SEMICOLON
-    {NULL, binary, Precedence::FACTOR}, // TOKEN_SLASH
-    {NULL, binary, Precedence::FACTOR}, // TOKEN_STAR
-    {NULL, NULL, Precedence::NONE},     // TOKEN_BANG
-    {NULL, NULL, Precedence::NONE},     // TOKEN_BANG_EQUAL
-    {NULL, NULL, Precedence::NONE},     // TOKEN_EQUAL
-    {NULL, NULL, Precedence::NONE},     // TOKEN_EQUAL_EQUAL
-    {NULL, NULL, Precedence::NONE},     // TOKEN_GREATER
-    {NULL, NULL, Precedence::NONE},     // TOKEN_GREATER_EQUAL
-    {NULL, NULL, Precedence::NONE},     // TOKEN_LESS
-    {NULL, NULL, Precedence::NONE},     // TOKEN_LESS_EQUAL
-    {NULL, NULL, Precedence::NONE},     // TOKEN_IDENTIFIER
-    {NULL, NULL, Precedence::NONE},     // TOKEN_STRING
-    {number, NULL, Precedence::NONE},   // TOKEN_NUMBER
-    {NULL, NULL, Precedence::NONE},     // TOKEN_AND
-    {NULL, NULL, Precedence::NONE},     // TOKEN_CLASS
-    {NULL, NULL, Precedence::NONE},     // TOKEN_ELSE
-    {NULL, NULL, Precedence::NONE},     // TOKEN_FALSE
-    {NULL, NULL, Precedence::NONE},     // TOKEN_FOR
-    {NULL, NULL, Precedence::NONE},     // TOKEN_FUN
-    {NULL, NULL, Precedence::NONE},     // TOKEN_IF
-    {NULL, NULL, Precedence::NONE},     // TOKEN_NIL
-    {NULL, NULL, Precedence::NONE},     // TOKEN_OR
-    {NULL, NULL, Precedence::NONE},     // TOKEN_PRINT
-    {NULL, NULL, Precedence::NONE},     // TOKEN_RETURN
-    {NULL, NULL, Precedence::NONE},     // TOKEN_SUPER
-    {NULL, NULL, Precedence::NONE},     // TOKEN_THIS
-    {NULL, NULL, Precedence::NONE},     // TOKEN_TRUE
-    {NULL, NULL, Precedence::NONE},     // TOKEN_VAR
-    {NULL, NULL, Precedence::NONE},     // TOKEN_WHILE
-    {NULL, NULL, Precedence::NONE},     // TOKEN_ERROR
-    {NULL, NULL, Precedence::NONE},     // TOKEN_EOF
+    {grouping, NULL, Precedence::NONE},     // TOKEN_LEFT_PAREN
+    {NULL, NULL, Precedence::NONE},         // TOKEN_RIGHT_PAREN
+    {NULL, NULL, Precedence::NONE},         // TOKEN_LEFT_BRACE
+    {NULL, NULL, Precedence::NONE},         // TOKEN_RIGHT_BRACE
+    {NULL, NULL, Precedence::NONE},         // TOKEN_COMMA
+    {NULL, NULL, Precedence::NONE},         // TOKEN_DOT
+    {unary, binary, Precedence::TERM},      // TOKEN_MINUS
+    {NULL, binary, Precedence::TERM},       // TOKEN_PLUS
+    {NULL, NULL, Precedence::NONE},         // TOKEN_SEMICOLON
+    {NULL, binary, Precedence::FACTOR},     // TOKEN_SLASH
+    {NULL, binary, Precedence::FACTOR},     // TOKEN_STAR
+    {unary, NULL, Precedence::NONE},        // TOKEN_BANG
+    {NULL, binary, Precedence::EQUALITY},   // TOKEN_BANG_EQUAL
+    {NULL, NULL, Precedence::NONE},         // TOKEN_EQUAL
+    {NULL, binary, Precedence::EQUALITY},   // TOKEN_EQUAL_EQUAL
+    {NULL, binary, Precedence::COMPARISON}, // TOKEN_GREATER
+    {NULL, binary, Precedence::COMPARISON}, // TOKEN_GREATER_EQUAL
+    {NULL, binary, Precedence::COMPARISON}, // TOKEN_LESS
+    {NULL, binary, Precedence::COMPARISON}, // TOKEN_LESS_EQUAL
+    {NULL, NULL, Precedence::NONE},         // TOKEN_IDENTIFIER
+    {NULL, NULL, Precedence::NONE},         // TOKEN_STRING
+    {number, NULL, Precedence::NONE},       // TOKEN_NUMBER
+    {NULL, NULL, Precedence::NONE},         // TOKEN_AND
+    {NULL, NULL, Precedence::NONE},         // TOKEN_CLASS
+    {NULL, NULL, Precedence::NONE},         // TOKEN_ELSE
+    {literal, NULL, Precedence::NONE},      // TOKEN_FALSE
+    {NULL, NULL, Precedence::NONE},         // TOKEN_FOR
+    {NULL, NULL, Precedence::NONE},         // TOKEN_FUN
+    {NULL, NULL, Precedence::NONE},         // TOKEN_IF
+    {literal, NULL, Precedence::NONE},      // TOKEN_NIL
+    {NULL, NULL, Precedence::NONE},         // TOKEN_OR
+    {NULL, NULL, Precedence::NONE},         // TOKEN_PRINT
+    {NULL, NULL, Precedence::NONE},         // TOKEN_RETURN
+    {NULL, NULL, Precedence::NONE},         // TOKEN_SUPER
+    {NULL, NULL, Precedence::NONE},         // TOKEN_THIS
+    {literal, NULL, Precedence::NONE},      // TOKEN_TRUE
+    {NULL, NULL, Precedence::NONE},         // TOKEN_VAR
+    {NULL, NULL, Precedence::NONE},         // TOKEN_WHILE
+    {NULL, NULL, Precedence::NONE},         // TOKEN_ERROR
+    {NULL, NULL, Precedence::NONE},         // TOKEN_EOF
 };
 
 auto get_rule(TokenType type) -> ParseRule const & {

@@ -21,24 +21,29 @@ using lox::write;
 auto repl(VirtualMachine &vm) -> void;
 auto run_file(VirtualMachine &vm, char const *path) -> void;
 
-auto main(int argc, char const *argv[]) -> int {
+auto main(int argc, char const *argv[]) -> int
+{
   auto vm = VirtualMachine{};
   if (argc == 1)
     repl(vm);
   else if (argc == 2)
     run_file(vm, argv[1]);
-  else {
+  else
+  {
     fprintf(stderr, "Usage: lox [path]\n");
     exit(64);
   }
   return 0;
 }
 
-auto repl(VirtualMachine &vm) -> void {
+auto repl(VirtualMachine &vm) -> void
+{
   char line[1024];
-  for (;;) {
+  for (;;)
+  {
     printf("> ");
-    if (!fgets(line, sizeof(line), stdin)) {
+    if (!fgets(line, sizeof(line), stdin))
+    {
       printf("\n");
       break;
     }
@@ -46,7 +51,8 @@ auto repl(VirtualMachine &vm) -> void {
   }
 }
 
-auto run_file(VirtualMachine &vm, char const *path) -> void {
+auto run_file(VirtualMachine &vm, char const *path) -> void
+{
   auto file = std::ifstream{path};
   auto const source = std::string{std::istreambuf_iterator<char>(file),
                                   std::istreambuf_iterator<char>()};

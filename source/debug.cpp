@@ -50,6 +50,18 @@ auto disassemble(Chunk const &chunk, int offset) -> int {
     return constant_instruction("CONSTANT", chunk, offset);
   case static_cast<uint8_t>(OpCode::CONSTANT_LONG):
     return constant_long_instruction("CONSTANT LONG", chunk, offset);
+  case static_cast<uint8_t>(OpCode::FALSE):
+    return simple_instruction("FALSE", offset);
+  case static_cast<uint8_t>(OpCode::TRUE):
+    return simple_instruction("TRUE", offset);
+  case static_cast<uint8_t>(OpCode::NIL):
+    return simple_instruction("NIL", offset);
+  case static_cast<uint8_t>(OpCode::EQUAL):
+    return simple_instruction("EQUAL", offset);
+  case static_cast<uint8_t>(OpCode::GREATER):
+    return simple_instruction("GREATER", offset);
+  case static_cast<uint8_t>(OpCode::LESS):
+    return simple_instruction("LESS", offset);
   case static_cast<uint8_t>(OpCode::ADD):
     return simple_instruction("ADD", offset);
   case static_cast<uint8_t>(OpCode::SUBTRACT):
@@ -58,6 +70,8 @@ auto disassemble(Chunk const &chunk, int offset) -> int {
     return simple_instruction("MULTIPLY", offset);
   case static_cast<uint8_t>(OpCode::DIVIDE):
     return simple_instruction("DIVIDE", offset);
+  case static_cast<uint8_t>(OpCode::NOT):
+    return simple_instruction("NOT", offset);
   case static_cast<uint8_t>(OpCode::NEGATE):
     return simple_instruction("NEGATE", offset);
   case static_cast<uint8_t>(OpCode::RETURN):

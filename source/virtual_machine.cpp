@@ -10,6 +10,7 @@
 namespace lox {
 
 auto runtime_error(VirtualMachine &vm, const char *format, ...) -> void;
+auto is_falsey(Value value) -> bool;
 
 VirtualMachine::VirtualMachine() { reset_stack(*this); }
 
@@ -63,6 +64,26 @@ auto run(VirtualMachine &vm) -> InterpretResult {
       push(vm, constant);
       break;
     }
+    case static_cast<uint8_t>(OpCode::FALSE):
+      push(vm, bool_val(false));
+      break;
+    case static_cast<uint8_t>(OpCode::TRUE):
+      push(vm, bool_val(true));
+      break;
+    case static_cast<uint8_t>(OpCode::NIL):
+      push(vm, nil_val);
+      break;
+    case static_cast<uint8_t>(OpCode::EQUAL):
+      push(vm, bool_val(pop(vm) == pop(vm)));
+      break;
+    case static_cast<uint8_t>(OpCode::GREATER):
+      if (!binary_op(bool_val, std::greater<double>()))
+        return InterpretResult::RUNTIME_ERROR;
+      break;
+    case static_cast<uint8_t>(OpCode::LESS):
+      if (!binary_op(bool_val, std::less<double>()))
+        return InterpretResult::RUNTIME_ERROR;
+      break;
     case static_cast<uint8_t>(OpCode::ADD):
       if (!binary_op(number_val, std::plus<double>()))
         return InterpretResult::RUNTIME_ERROR;
@@ -78,6 +99,9 @@ auto run(VirtualMachine &vm) -> InterpretResult {
     case static_cast<uint8_t>(OpCode::DIVIDE):
       if (!binary_op(number_val, std::divides<double>()))
         return InterpretResult::RUNTIME_ERROR;
+      break;
+    case static_cast<uint8_t>(OpCode::NOT):
+      push(vm, bool_val(is_falsey(pop(vm))));
       break;
     case static_cast<uint8_t>(OpCode::NEGATE):
       if (!is_number(peek(vm, 0))) {
@@ -116,6 +140,10 @@ auto pop(VirtualMachine &vm) -> Value {
 
 auto peek(VirtualMachine &vm, int distance) -> Value {
   return vm.stack_top[-1 - distance];
+}
+
+auto is_falsey(Value value) -> bool {
+  return is_nil(value) || (is_bool(value) && !value.as.boolean);
 }
 
 } // namespace lox
